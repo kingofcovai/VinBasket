@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>VinBasket - Shop Smart. Stay on Budget.</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- PWA Manifest support -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f8fafc">
+</head>
+<body>
+
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <h1 class="logo-title">VinBasket</h1>
+        <p class="logo-tagline">Shop Smart. Stay on Budget.</p>
+      </div>
+      <button id="btn-reset" class="btn-icon-only reset-btn" title="Reset All Data">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+    </header>
+
+    <!-- Budget Status Banner (Exceeded Warning) -->
+    <div id="budget-exceeded-banner" class="budget-alert-banner hidden">
+      <div class="alert-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      </div>
+      <div class="alert-content">
+        <span class="alert-title">Budget Exceeded!</span>
+        <span class="alert-details">Over by <strong id="alert-over-amount">₹0.00</strong></span>
+      </div>
+    </div>
+
+    <!-- Sticky Budget Summary Card (shown on Shopping tab) -->
+    <section id="budget-summary-card" class="budget-card">
+      <div class="budget-row active-shop-row">
+        <label for="select-active-shop" class="budget-label">Shopping At</label>
+        <select id="select-active-shop" class="active-shop-select">
+          <option value="all">All Shops</option>
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+      
+      <div class="divider"></div>
+
+      <div class="budget-row target-row">
+        <label for="input-target-budget" class="budget-label">Target Budget</label>
+        <div class="budget-input-wrapper">
+          <span class="currency-symbol">₹</span>
+          <input type="number" id="input-target-budget" class="budget-input" value="2000" min="0" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+
+      <div class="budget-stats-grid">
+        <div class="stat-col">
+          <span class="stat-label">Estimated Total</span>
+          <span id="display-current-total" class="stat-value">₹0.00</span>
+        </div>
+        <div class="stat-col border-left">
+          <span class="stat-label">Remaining</span>
+          <span id="display-remaining-budget" class="stat-value">₹2,000.00</span>
+        </div>
+      </div>
+
+      <div class="budget-status-row">
+        <div id="budget-status-badge" class="status-badge status-within">
+          <span class="status-dot"></span>
+          <span id="budget-status-text">Within Budget</span>
+        </div>
+        <div id="cart-total-badge" class="cart-total-badge">
+          In Cart: <strong id="display-cart-total">₹0.00</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Tab Navigation -->
+    <nav class="tab-nav">
+      <button id="tab-shopping" class="tab-btn active" aria-current="page">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        <span>Shopping</span>
+        <span id="badge-shopping-count" class="tab-badge hidden">0</span>
+      </button>
+      <button id="tab-database" class="tab-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Database</span>
+      </button>
+      <button id="tab-dashboard" class="tab-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button id="tab-history" class="tab-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>History</span>
+      </button>
+    </nav>
+
+    <!-- Main List/Content Container -->
+    <main class="list-container">
+      
+      <!-- 1. SHOPPING TABS VIEW -->
+      <div id="view-shopping" class="list-view">
+        <!-- Sub navigation for shopping lists (To Buy vs Bought) -->
+        <div class="sub-tabs-bar">
+          <button id="subtab-tobuy" class="sub-tab-btn active">To Buy</button>
+          <button id="subtab-bought" class="sub-tab-btn">Bought</button>
+        </div>
+
+        <!-- To Buy List Subview -->
+        <div id="subview-tobuy" class="sub-list-view">
+          <div id="tobuy-list-empty" class="empty-state">
+            <div class="empty-icon">🏠</div>
+            <h3>Your To-Buy List is Empty</h3>
+            <p>Select items in the database or tap the float button below to start shopping!</p>
+          </div>
+          <div id="tobuy-list" class="items-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Bought List Subview -->
+        <div id="subview-bought" class="sub-list-view hidden">
+          <div id="bought-list-empty" class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No Bought Items Yet</h3>
+            <p>Check off items under "To Buy" to move them here as you shop.</p>
+          </div>
+          <div id="bought-list" class="items-list">
+            <!-- Dynamically populated -->
+          </div>
+          <div id="bought-actions-container" class="action-btn-container hidden">
+            <button id="btn-complete-trip" class="btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              <span>Complete & Save Trip</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. MASTER DATABASE VIEW -->
+      <div id="view-database" class="list-view hidden">
+        <div class="sub-tabs-bar scrollable-tabs">
+          <button id="subtab-db-items" class="sub-tab-btn active">All Items</button>
+          <button id="subtab-db-shops" class="sub-tab-btn">Shops</button>
+          <button id="subtab-db-categories" class="sub-tab-btn">Categories</button>
+        </div>
+
+        <!-- Master Items List -->
+        <div id="subview-db-items" class="sub-list-view">
+          <div class="search-bar-row">
+            <input type="text" id="input-item-search" class="search-input" placeholder="Search item list...">
+            <button id="btn-add-master-item" class="btn-secondary" title="Create New Item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+              <span>New</span>
+            </button>
+          </div>
+          <div id="db-items-list" class="master-items-list">
+            <!-- Dynamically populated master list -->
+          </div>
+        </div>
+
+        <!-- Shops List Manager -->
+        <div id="subview-db-shops" class="sub-list-view hidden">
+          <div class="add-master-row">
+            <input type="text" id="input-add-shop" class="master-add-input" placeholder="New shop name...">
+            <button id="btn-add-shop" class="btn-primary-small">Add Shop</button>
+          </div>
+          <div id="db-shops-list" class="master-metadata-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Categories List Manager -->
+        <div id="subview-db-categories" class="sub-list-view hidden">
+          <div class="add-master-row">
+            <input type="text" id="input-add-category" class="master-add-input" placeholder="New category name...">
+            <button id="btn-add-category" class="btn-primary-small">Add Category</button>
+          </div>
+          <div id="db-categories-list" class="master-metadata-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. DASHBOARD VIEW -->
+      <div id="view-dashboard" class="list-view hidden">
+        <div class="sub-tabs-bar">
+          <button id="subtab-dash-shops" class="sub-tab-btn active">Shops</button>
+          <button id="subtab-dash-categories" class="sub-tab-btn">Categories</button>
+        </div>
+
+        <!-- Selector for Entity -->
+        <div class="dash-selector-row">
+          <label for="select-dash-entity" id="lbl-dash-entity" class="budget-label">Select Shop</label>
+          <select id="select-dash-entity" class="active-shop-select">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <!-- Dashboard Data Cards -->
+        <div id="dashboard-content" class="dashboard-content-card">
+          <div class="dashboard-progress-container">
+            <div class="dashboard-progress-label">
+              <span>Trip Progress</span>
+              <span id="dash-progress-text">0%</span>
+            </div>
+            <div class="dashboard-progress-bar-bg">
+              <div id="dash-progress-fill" class="dashboard-progress-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="dashboard-stats-grid">
+            <div class="dash-stat-box">
+              <span class="dash-stat-label">Estimated Cost</span>
+              <span id="dash-est-cost" class="dash-stat-value">₹0.00</span>
+            </div>
+            <div class="dash-stat-box">
+              <span class="dash-stat-label">Purchased Cost</span>
+              <span id="dash-pur-cost" class="dash-stat-value">₹0.00</span>
+            </div>
+            <div class="dash-stat-box full-width-stat">
+              <span class="dash-stat-label">Remaining Items to Buy</span>
+              <span id="dash-rem-items" class="dash-stat-value-badge">0 Items</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. TRIP HISTORY & PRICE REFERENCE VIEW -->
+      <div id="view-history" class="list-view hidden">
+        <div class="sub-tabs-bar">
+          <button id="subtab-hist-trips" class="sub-tab-btn active">Trips</button>
+          <button id="subtab-hist-prices" class="sub-tab-btn">Price History</button>
+        </div>
+
+        <!-- Trips History Subview -->
+        <div id="subview-hist-trips" class="sub-list-view">
+          <div class="history-header">
+            <h2>Past Shopping Trips</h2>
+            <button id="btn-clear-history" class="text-btn danger" title="Clear all history">Clear All</button>
+          </div>
+          <div id="history-list-empty" class="empty-state">
+            <div class="empty-icon">⏱</div>
+            <h3>No Past Trips Recorded</h3>
+            <p>Trip history will appear here once you complete a shopping trip.</p>
+          </div>
+          <div id="history-list" class="history-list-container">
+            <!-- Dynamically populated past trips -->
+          </div>
+        </div>
+
+        <!-- Price History Table Subview -->
+        <div id="subview-hist-prices" class="sub-list-view hidden">
+          <div class="history-header">
+            <h2>Recorded Shop Prices</h2>
+          </div>
+          <div id="price-history-empty" class="empty-state">
+            <div class="empty-icon">📈</div>
+            <h3>No Price Records Yet</h3>
+            <p>Purchase items at specific shops to build up your price history card automatically!</p>
+          </div>
+          <div id="price-history-table" class="price-history-table-container">
+            <!-- Dynamically populated items and shop prices -->
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Floating Action Button -->
+    <button id="btn-add-item" class="fab-btn" title="Add Item">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+      <span>Add Item</span>
+    </button>
+
+  </div>
+
+  <!-- OVERLAY MODAL: EDIT MASTER ITEM -->
+  <div id="modal-edit-item" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <header class="modal-header">
+        <h3 id="modal-title">Edit Master Item</h3>
+        <button id="btn-modal-close" class="modal-close-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        
+        <!-- Name & Favorite -->
+        <div class="modal-field-group inline-field">
+          <div class="field-item flex-3">
+            <label for="modal-input-name" class="modal-label">Item Name</label>
+            <input type="text" id="modal-input-name" class="modal-input" placeholder="e.g. Milk, Apples">
+          </div>
+          <div class="field-item flex-1 text-center">
+            <label class="modal-label">Favorite</label>
+            <button id="btn-modal-fav" class="fav-toggle-btn" title="Toggle Favorite">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Category & Unit -->
+        <div class="modal-field-group inline-field">
+          <div class="field-item">
+            <label for="modal-select-category" class="modal-label">Category</label>
+            <select id="modal-select-category" class="modal-select">
+              <option value="">Uncategorized</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="field-item">
+            <label for="modal-select-unit" class="modal-label">Default Unit</label>
+            <select id="modal-select-unit" class="modal-select">
+              <option value="pcs">pcs (Piece)</option>
+              <option value="kg">kg (Kilogram)</option>
+              <option value="g">g (Gram)</option>
+              <option value="litres">L (Litre)</option>
+              <option value="ml">ml (Millilitre)</option>
+              <option value="packs">pack (Pack)</option>
+              <option value="doz">doz (Dozen)</option>
+              <option value="boxes">box (Box)</option>
+              <option value="bags">bag (Bag)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Default Price -->
+        <div class="modal-field-group">
+          <label for="modal-input-price" class="modal-label">Estimated Price per Unit (₹)</label>
+          <input type="number" id="modal-input-price" class="modal-input" placeholder="0.00" min="0" step="any" inputmode="decimal">
+        </div>
+
+        <!-- Shop Assignments -->
+        <div class="modal-field-group">
+          <label class="modal-label">Assigned Shops (where sold)</label>
+          <div id="modal-shop-checklist" class="modal-checklist-box">
+            <!-- Dynamically populated checkbox list of custom shops -->
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="modal-field-group">
+          <label for="modal-input-notes" class="modal-label">Shopping Notes</label>
+          <textarea id="modal-input-notes" class="modal-textarea" placeholder="Add details like brand preference, size, shelf location..."></textarea>
+        </div>
+
+      </div>
+      <footer class="modal-footer">
+        <button id="btn-modal-cancel" class="btn-secondary-modal">Cancel</button>
+        <button id="btn-modal-save" class="btn-primary-modal">Save Changes</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>
