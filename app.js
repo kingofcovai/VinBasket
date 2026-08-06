@@ -9,7 +9,8 @@ let state = {
   shops: [],
   categories: [],
   history: [],
-  activeTab: 'shopping',       // 'shopping', 'database', 'dashboard', 'history'
+  archive: [],                 // Recycle Bin Archive
+  activeTab: 'shopping',       // 'shopping', 'database', 'dashboard', 'history', 'archive'
   activeShopFilter: 'all',     // 'all' or specific shopId
   shoppingSubTab: 'tobuy',     // 'tobuy' or 'bought'
   dbSubTab: 'items',           // 'items', 'shops', 'categories'
@@ -35,12 +36,15 @@ const dom = {
   tabDatabase: document.getElementById('tab-database'),
   tabDashboard: document.getElementById('tab-dashboard'),
   tabHistory: document.getElementById('tab-history'),
+  tabArchive: document.getElementById('tab-archive'),
   badgeShoppingCount: document.getElementById('badge-shopping-count'),
+  badgeArchiveCount: document.getElementById('badge-archive-count'),
   
   viewShopping: document.getElementById('view-shopping'),
   viewDatabase: document.getElementById('view-database'),
   viewDashboard: document.getElementById('view-dashboard'),
   viewHistory: document.getElementById('view-history'),
+  viewArchive: document.getElementById('view-archive'),
   
   subtabToBuy: document.getElementById('subtab-tobuy'),
   subtabBought: document.getElementById('subtab-bought'),
@@ -90,6 +94,19 @@ const dom = {
   priceHistoryTable: document.getElementById('price-history-table'),
   btnClearHistory: document.getElementById('btn-clear-history'),
   btnAddItem: document.getElementById('btn-add-item'),
+
+  // Archive
+  btnEmptyArchive: document.getElementById('btn-empty-archive'),
+  archiveActionsBar: document.getElementById('archive-actions-bar'),
+  btnRestoreSelected: document.getElementById('btn-restore-selected'),
+  btnDeleteSelectedPerm: document.getElementById('btn-delete-selected-perm'),
+  chkSelectAllArchive: document.getElementById('chk-select-all-archive'),
+  inputArchiveSearch: document.getElementById('input-archive-search'),
+  archiveListEmpty: document.getElementById('archive-list-empty'),
+  archiveList: document.getElementById('archive-list'),
+  undoSnackbar: document.getElementById('undo-snackbar'),
+  snackbarMsg: document.getElementById('snackbar-msg'),
+  btnSnackbarUndo: document.getElementById('btn-snackbar-undo'),
   
   // Modals
   modalEditItem: document.getElementById('modal-edit-item'),
@@ -145,6 +162,11 @@ function loadState() {
       state.activeTab = 'shopping';
       state.shoppingSubTab = 'tobuy';
       state.activeShopFilter = state.activeShopFilter || 'all';
+      
+      // Ensure archive array exists
+      if (!state.archive) {
+        state.archive = [];
+      }
     } catch (e) {
       console.error('Error loading state from localStorage:', e);
       resetToDefault();
@@ -164,6 +186,7 @@ function resetToDefault() {
   state.categories = JSON.parse(JSON.stringify(defaultCategories));
   state.items = JSON.parse(JSON.stringify(defaultItems));
   state.history = [];
+  state.archive = [];
   state.activeTab = 'shopping';
   state.activeShopFilter = 'all';
   state.shoppingSubTab = 'tobuy';
@@ -262,6 +285,15 @@ function calculateAndUpdateSummary() {
     dom.badgeShoppingCount.classList.remove('hidden');
   } else {
     dom.badgeShoppingCount.classList.add('hidden');
+  }
+
+  // Update bottom tab badge for archive items count
+  const archiveItemsCount = state.archive ? state.archive.length : 0;
+  if (archiveItemsCount > 0) {
+    dom.badgeArchiveCount.innerText = archiveItemsCount;
+    dom.badgeArchiveCount.classList.remove('hidden');
+  } else {
+    dom.badgeArchiveCount.classList.add('hidden');
   }
 }
 
@@ -582,7 +614,7 @@ function renderMasterItemsList() {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="${item.favorite ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </span>
         <div class="db-item-details">
-          <span class="db-item-name">${item.name}</span>
+          <span class="db-item-name">${item.name || 'Unnamed Item'}</span>
           <div class="db-pills-row">
             <span class="pill-tag category-pill">${categoryName}</span>
             <span class="pill-tag price-pill">Est: ₹${(item.estimatedPrice || 0).toFixed(2)}/${item.unit === 'litres' ? 'L' : item.unit}</span>
@@ -594,6 +626,9 @@ function renderMasterItemsList() {
         <button class="btn-icon-only edit-btn" title="Edit Item Relations">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         </button>
+        <button class="btn-icon-only text-btn danger delete-master-btn" title="Delete Master Item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
         <button class="trip-toggle-btn ${item.active ? 'active' : ''}" title="Add/Remove from shopping list">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${item.active ? '<path d="M20 6 9 17l-5-5"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg>
         </button>
@@ -603,6 +638,7 @@ function renderMasterItemsList() {
     // Event Bindings
     const favStar = row.querySelector('.db-fav-star');
     const btnEdit = row.querySelector('.edit-btn');
+    const btnDelete = row.querySelector('.delete-master-btn');
     const btnToggleTrip = row.querySelector('.trip-toggle-btn');
 
     favStar.addEventListener('click', () => {
@@ -614,6 +650,14 @@ function renderMasterItemsList() {
 
     btnEdit.addEventListener('click', () => {
       openEditItemModal(item.id);
+    });
+
+    btnDelete.addEventListener('click', () => {
+      softDelete('database', item.id, item.name, item);
+      state.items = state.items.filter(i => i.id !== item.id);
+      saveState();
+      calculateAndUpdateSummary();
+      renderMasterItemsList();
     });
 
     btnToggleTrip.addEventListener('click', () => {
@@ -662,27 +706,20 @@ function renderMasterShopsList() {
     `;
 
     row.querySelector('.delete-meta-btn').addEventListener('click', () => {
-      if (confirm(`Delete shop "${shop.name}"? This will unassign this shop from all items and delete its price history records.`)) {
-        // Clean up items
-        state.items.forEach(item => {
-          item.shopIds = item.shopIds.filter(id => id !== shop.id);
-          if (item.priceHistory && item.priceHistory[shop.id]) {
-            delete item.priceHistory[shop.id];
-          }
-        });
-        
-        state.shops = state.shops.filter(s => s.id !== shop.id);
-        
-        // If the active filter was set to this shop, reset it
-        if (state.activeShopFilter === shop.id) {
-          state.activeShopFilter = 'all';
-        }
-        
-        saveState();
-        calculateAndUpdateSummary();
-        renderActiveShopDropdown();
-        renderMasterShopsList();
+      softDelete('shop', shop.id, shop.name, shop);
+      state.shops = state.shops.filter(s => s.id !== shop.id);
+      
+      // If the active filter was set to this shop, reset it
+      if (state.activeShopFilter === shop.id) {
+        state.activeShopFilter = 'all';
+        dom.selectActiveShop.value = 'all';
+        suggestShopPrices();
       }
+      
+      saveState();
+      calculateAndUpdateSummary();
+      renderActiveShopDropdown();
+      renderMasterShopsList();
     });
 
     dom.dbShopsList.appendChild(row);
@@ -708,18 +745,10 @@ function renderMasterCategoriesList() {
     `;
 
     row.querySelector('.delete-meta-btn').addEventListener('click', () => {
-      if (confirm(`Delete category "${cat.name}"? All items inside this category will become Uncategorized.`)) {
-        // Clean up items
-        state.items.forEach(item => {
-          if (item.categoryId === cat.id) {
-            item.categoryId = '';
-          }
-        });
-
-        state.categories = state.categories.filter(c => c.id !== cat.id);
-        saveState();
-        renderMasterCategoriesList();
-      }
+      softDelete('category', cat.id, cat.name, cat);
+      state.categories = state.categories.filter(c => c.id !== cat.id);
+      saveState();
+      renderMasterCategoriesList();
     });
 
     dom.dbCategoriesList.appendChild(row);
@@ -1291,6 +1320,294 @@ function deleteTrip(tripId) {
 }
 
 /* ==========================================================================
+   Soft Delete & Recycle Bin Archive Architecture
+   ========================================================================== */
+
+let selectedArchiveIds = new Set();
+let undoTimeout = null;
+let currentUndoRecord = null;
+
+function softDelete(type, id, name, originalData) {
+  const timestamp = new Date();
+  const dateStr = timestamp.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+  const timeStr = timestamp.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const archiveEntry = {
+    archiveId: 'arc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    originalId: id,
+    type: type, // 'shopping', 'database', 'shop', 'category'
+    name: name || 'Unnamed Item',
+    deletedDate: dateStr,
+    deletedTime: timeStr,
+    originalData: JSON.parse(JSON.stringify(originalData)) // Deep copy
+  };
+
+  state.archive.push(archiveEntry);
+  saveState();
+
+  // Show undo snackbar
+  showUndoSnackbar(archiveEntry);
+  
+  // Re-render current list in case we are looking at it
+  if (state.activeTab === 'archive') {
+    renderArchive();
+  }
+}
+
+function showUndoSnackbar(archiveEntry) {
+  // Clear any existing timer
+  if (undoTimeout) {
+    clearTimeout(undoTimeout);
+    undoTimeout = null;
+  }
+  
+  currentUndoRecord = archiveEntry;
+  
+  if (!dom.undoSnackbar || !dom.snackbarMsg) return;
+
+  let typeLabel = 'Record';
+  if (archiveEntry.type === 'shopping') typeLabel = 'Shopping list item';
+  else if (archiveEntry.type === 'database') typeLabel = 'Master item';
+  else if (archiveEntry.type === 'shop') typeLabel = 'Shop';
+  else if (archiveEntry.type === 'category') typeLabel = 'Category';
+
+  dom.snackbarMsg.innerText = `✔ ${archiveEntry.name} (${typeLabel}) moved to Archive.`;
+  dom.undoSnackbar.classList.remove('hidden');
+
+  // Hide after 6 seconds
+  undoTimeout = setTimeout(() => {
+    hideUndoSnackbar();
+  }, 6000);
+}
+
+function hideUndoSnackbar() {
+  if (dom.undoSnackbar) {
+    dom.undoSnackbar.classList.add('hidden');
+  }
+  currentUndoRecord = null;
+  if (undoTimeout) {
+    clearTimeout(undoTimeout);
+    undoTimeout = null;
+  }
+}
+
+function executeUndo() {
+  if (!currentUndoRecord) return;
+  restoreRecord(currentUndoRecord.archiveId);
+  hideUndoSnackbar();
+}
+
+function restoreRecord(archiveId) {
+  const index = state.archive.findIndex(entry => entry.archiveId === archiveId);
+  if (index === -1) return;
+
+  const entry = state.archive[index];
+  
+  if (entry.type === 'shopping') {
+    const item = state.items.find(i => i.id === entry.originalId);
+    if (item) {
+      item.active = true;
+      item.quantity = entry.originalData.quantity;
+      item.unit = entry.originalData.unit;
+      item.price = entry.originalData.price;
+      item.total = entry.originalData.total;
+      item.bought = entry.originalData.bought;
+    }
+  } else if (entry.type === 'database') {
+    if (!state.items.find(i => i.id === entry.originalId)) {
+      state.items.push(entry.originalData);
+    }
+  } else if (entry.type === 'shop') {
+    if (!state.shops.find(s => s.id === entry.originalId)) {
+      state.shops.push(entry.originalData);
+    }
+  } else if (entry.type === 'category') {
+    if (!state.categories.find(c => c.id === entry.originalId)) {
+      state.categories.push(entry.originalData);
+    }
+  }
+
+  // Remove from archive list
+  state.archive.splice(index, 1);
+  saveState();
+  
+  // Re-calculate & Re-render everything
+  calculateAndUpdateSummary();
+  renderActiveShopDropdown();
+  renderShoppingList();
+  renderDatabase();
+  renderDashboard();
+  renderHistory();
+  
+  if (state.activeTab === 'archive') {
+    renderArchive();
+  }
+}
+
+function permanentlyDeleteArchiveEntries(archiveIds) {
+  if (archiveIds.length === 0) return;
+
+  const count = archiveIds.length;
+  const promptMsg = count === 1 
+    ? 'Delete selected item permanently?\n\nThis action cannot be undone.'
+    : `Delete these ${count} items permanently?\n\nThis action cannot be undone.`;
+
+  if (confirm(promptMsg)) {
+    archiveIds.forEach(archiveId => {
+      const entry = state.archive.find(e => e.archiveId === archiveId);
+      if (!entry) return;
+
+      // Clean up item associations permanently
+      if (entry.type === 'shop') {
+        const shopId = entry.originalId;
+        state.items.forEach(item => {
+          if (item.shopIds) {
+            item.shopIds = item.shopIds.filter(id => id !== shopId);
+          }
+          if (item.priceHistory && item.priceHistory[shopId]) {
+            delete item.priceHistory[shopId];
+          }
+        });
+        if (state.activeShopFilter === shopId) {
+          state.activeShopFilter = 'all';
+          dom.selectActiveShop.value = 'all';
+          suggestShopPrices();
+        }
+      } else if (entry.type === 'category') {
+        const categoryId = entry.originalId;
+        state.items.forEach(item => {
+          if (item.categoryId === categoryId) {
+            item.categoryId = '';
+          }
+        });
+      }
+
+      // Remove from archive list
+      state.archive = state.archive.filter(e => e.archiveId !== archiveId);
+      selectedArchiveIds.delete(archiveId);
+    });
+
+    saveState();
+    
+    // Refresh views
+    calculateAndUpdateSummary();
+    renderActiveShopDropdown();
+    renderShoppingList();
+    renderDatabase();
+    renderDashboard();
+    renderHistory();
+    
+    if (state.activeTab === 'archive') {
+      renderArchive();
+    }
+  }
+}
+
+function renderArchive() {
+  dom.archiveList.innerHTML = '';
+  const searchVal = dom.inputArchiveSearch.value.toLowerCase().trim();
+
+  const filteredArchive = state.archive.filter(entry => {
+    return entry.name.toLowerCase().includes(searchVal) ||
+           entry.type.toLowerCase().includes(searchVal);
+  });
+
+  if (filteredArchive.length === 0) {
+    dom.archiveListEmpty.classList.remove('hidden');
+    dom.archiveActionsBar.classList.add('hidden');
+    dom.chkSelectAllArchive.checked = false;
+    return;
+  }
+
+  dom.archiveListEmpty.classList.add('hidden');
+  
+  // Show actions bar if any entries are checked
+  updateArchiveActionBarVisibility();
+
+  // Draw list
+  filteredArchive.forEach(entry => {
+    const row = document.createElement('div');
+    row.className = 'archive-item-row';
+    row.dataset.id = entry.archiveId;
+
+    let typeLabel = 'Record';
+    let typeClass = '';
+    if (entry.type === 'shopping') { typeLabel = 'Shopping List'; typeClass = 'category-pill'; }
+    else if (entry.type === 'database') { typeLabel = 'Master Database'; typeClass = 'price-pill'; }
+    else if (entry.type === 'shop') { typeLabel = 'Shop List'; }
+    else if (entry.type === 'category') { typeLabel = 'Category List'; }
+
+    const isChecked = selectedArchiveIds.has(entry.archiveId);
+
+    row.innerHTML = `
+      <div class="archive-item-left">
+        <label class="checkbox-container">
+          <input type="checkbox" class="archive-checkbox" ${isChecked ? 'checked' : ''}>
+          <span class="checkmark"></span>
+        </label>
+        <div class="archive-item-details">
+          <span class="archive-item-name">${entry.name}</span>
+          <div class="archive-item-meta">
+            <span class="pill-tag ${typeClass}">${typeLabel}</span>
+            <span>Deleted: ${entry.deletedDate}, ${entry.deletedTime}</span>
+          </div>
+        </div>
+      </div>
+      <div class="archive-item-right">
+        <button class="btn-icon-only restore-btn" title="Restore to original location">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M16 3h5v5"/></svg>
+        </button>
+        <button class="btn-icon-only text-btn danger delete-perm-btn" title="Delete permanently">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+    `;
+
+    // Event Bindings
+    const chk = row.querySelector('.archive-checkbox');
+    chk.addEventListener('change', () => {
+      if (chk.checked) {
+        selectedArchiveIds.add(entry.archiveId);
+      } else {
+        selectedArchiveIds.delete(entry.archiveId);
+      }
+      updateSelectAllCheckboxState(filteredArchive);
+      updateArchiveActionBarVisibility();
+    });
+
+    row.querySelector('.restore-btn').addEventListener('click', () => {
+      restoreRecord(entry.archiveId);
+    });
+
+    row.querySelector('.delete-perm-btn').addEventListener('click', () => {
+      permanentlyDeleteArchiveEntries([entry.archiveId]);
+    });
+
+    dom.archiveList.appendChild(row);
+  });
+}
+
+function updateArchiveActionBarVisibility() {
+  if (selectedArchiveIds.size > 0) {
+    dom.archiveActionsBar.classList.remove('hidden');
+  } else {
+    dom.archiveActionsBar.classList.add('hidden');
+  }
+}
+
+function updateSelectAllCheckboxState(filteredArchive) {
+  const allFilteredChecked = filteredArchive.every(entry => selectedArchiveIds.has(entry.archiveId));
+  dom.chkSelectAllArchive.checked = allFilteredChecked;
+}
+
+/* ==========================================================================
    Tab Navigation & Control
    ========================================================================== */
 
@@ -1307,11 +1624,17 @@ function switchTab(tabName) {
   dom.tabDashboard.removeAttribute('aria-current');
   dom.tabHistory.classList.remove('active');
   dom.tabHistory.removeAttribute('aria-current');
+  dom.tabArchive.classList.remove('active');
+  dom.tabArchive.removeAttribute('aria-current');
 
   dom.viewShopping.classList.add('hidden');
   dom.viewDatabase.classList.add('hidden');
   dom.viewDashboard.classList.add('hidden');
   dom.viewHistory.classList.add('hidden');
+  dom.viewArchive.classList.add('hidden');
+
+  // Hide undo snackbar when switching tabs to prevent overlay issues
+  hideUndoSnackbar();
 
   // Trigger correct view
   if (tabName === 'shopping') {
@@ -1342,6 +1665,13 @@ function switchTab(tabName) {
     dom.budgetSummaryCard.classList.add('hidden');
     dom.btnAddItem.classList.add('hidden');
     renderHistory();
+  } else if (tabName === 'archive') {
+    dom.tabArchive.classList.add('active');
+    dom.tabArchive.setAttribute('aria-current', 'page');
+    dom.viewArchive.classList.remove('hidden');
+    dom.budgetSummaryCard.classList.add('hidden');
+    dom.btnAddItem.classList.add('hidden');
+    renderArchive();
   }
 }
 
@@ -1428,6 +1758,7 @@ function init() {
   dom.tabDatabase.addEventListener('click', () => switchTab('database'));
   dom.tabDashboard.addEventListener('click', () => switchTab('dashboard'));
   dom.tabHistory.addEventListener('click', () => switchTab('history'));
+  dom.tabArchive.addEventListener('click', () => switchTab('archive'));
 
   // Bind Sub Tabs Toggles
   dom.subtabToBuy.addEventListener('click', () => switchShoppingSubTab('tobuy'));
@@ -1590,6 +1921,53 @@ function init() {
     state.items.push(newItem);
     saveState();
     openEditItemModal(newItem.id);
+  });
+
+  // Undo Snackbar trigger
+  dom.btnSnackbarUndo.addEventListener('click', executeUndo);
+
+  // Empty Archive trigger
+  dom.btnEmptyArchive.addEventListener('click', () => {
+    if (!state.archive || state.archive.length === 0) return;
+    const allArchiveIds = state.archive.map(entry => entry.archiveId);
+    permanentlyDeleteArchiveEntries(allArchiveIds);
+  });
+
+  // Restore Selected trigger
+  dom.btnRestoreSelected.addEventListener('click', () => {
+    if (selectedArchiveIds.size === 0) return;
+    const idsToRestore = Array.from(selectedArchiveIds);
+    idsToRestore.forEach(id => restoreRecord(id));
+    selectedArchiveIds.clear();
+    updateArchiveActionBarVisibility();
+  });
+
+  // Delete Selected Permanently trigger
+  dom.btnDeleteSelectedPerm.addEventListener('click', () => {
+    if (selectedArchiveIds.size === 0) return;
+    const idsToDelete = Array.from(selectedArchiveIds);
+    permanentlyDeleteArchiveEntries(idsToDelete);
+  });
+
+  // Search input change on Archive list
+  dom.inputArchiveSearch.addEventListener('input', () => {
+    renderArchive();
+  });
+
+  // Select all checkbox in Archive list
+  dom.chkSelectAllArchive.addEventListener('change', () => {
+    const searchVal = dom.inputArchiveSearch.value.toLowerCase().trim();
+    const filteredArchive = state.archive.filter(entry => {
+      return entry.name.toLowerCase().includes(searchVal) ||
+             entry.type.toLowerCase().includes(searchVal);
+    });
+
+    if (dom.chkSelectAllArchive.checked) {
+      filteredArchive.forEach(entry => selectedArchiveIds.add(entry.archiveId));
+    } else {
+      filteredArchive.forEach(entry => selectedArchiveIds.delete(entry.archiveId));
+    }
+    renderArchive();
   });
 
   // Calculate, build dropdowns, and draw

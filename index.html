@@ -280,6 +280,44 @@
         </div>
       </div>
 
+      <!-- 5. ARCHIVE VIEW -->
+      <div id="view-archive" class="list-view hidden">
+        <div class="archive-header-row">
+          <h2>Archive (Recycle Bin)</h2>
+          <button id="btn-empty-archive" class="text-btn danger" title="Permanently delete all archived items">Empty Archive</button>
+        </div>
+
+        <div id="archive-actions-bar" class="archive-actions-bar hidden">
+          <button id="btn-restore-selected" class="btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M16 3h5v5"/></svg>
+            <span>Restore Selected</span>
+          </button>
+          <button id="btn-delete-selected-perm" class="btn-secondary text-btn danger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete Selected</span>
+          </button>
+        </div>
+
+        <div class="archive-search-row">
+          <label class="checkbox-container">
+            <input type="checkbox" id="chk-select-all-archive">
+            <span class="checkmark"></span>
+          </label>
+          <span class="select-all-text">Select All</span>
+          <input type="text" id="input-archive-search" class="search-input" placeholder="Search archive...">
+        </div>
+
+        <div id="archive-list-empty" class="empty-state">
+          <div class="empty-icon">🗑</div>
+          <h3>Archive is Empty</h3>
+          <p>Deleted items, shops, or categories will appear here. You can restore them anytime.</p>
+        </div>
+
+        <div id="archive-list" class="archive-list-container">
+          <!-- Dynamically populated archived rows -->
+        </div>
+      </div>
+
     </main>
 
     <!-- Floating Action Button -->
@@ -366,6 +404,12 @@
         <button id="btn-modal-save" class="btn-primary-modal">Save Changes</button>
       </footer>
     </div>
+  </div>
+
+  <!-- UNDO SNACKBAR -->
+  <div id="undo-snackbar" class="snackbar hidden">
+    <span id="snackbar-msg">Item moved to Archive.</span>
+    <button id="btn-snackbar-undo" class="snackbar-action">UNDO</button>
   </div>
 
   <!-- JavaScript -->
