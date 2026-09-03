@@ -526,10 +526,11 @@ function createShoppingItemRow(item, index, isBought) {
     calculateAndUpdateSummary();
   });
 
-  // Remove from current trip
+  // Remove from current trip (Soft Delete to Archive)
   btnDelete.addEventListener('click', () => {
     row.classList.add('removing-item');
     setTimeout(() => {
+      softDelete('shopping', item.id, item.name, item);
       item.active = false;
       item.bought = false;
       item.price = 0;
@@ -1407,6 +1408,10 @@ function restoreRecord(archiveId) {
       item.price = entry.originalData.price;
       item.total = entry.originalData.total;
       item.bought = entry.originalData.bought;
+    } else {
+      const restoredItem = JSON.parse(JSON.stringify(entry.originalData));
+      restoredItem.active = true;
+      state.items.push(restoredItem);
     }
   } else if (entry.type === 'database') {
     if (!state.items.find(i => i.id === entry.originalId)) {
