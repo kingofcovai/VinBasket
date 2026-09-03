@@ -123,10 +123,16 @@
 
         <!-- To Buy List Subview -->
         <div id="subview-tobuy" class="sub-list-view">
+          <h2 id="tobuy-list-title" class="list-heading hidden">My To-Buy List (0 items)</h2>
+          <div class="add-item-container">
+            <button id="btn-add-item" class="fab-btn" title="Add Item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+              <span>Add Item</span>
+            </button>
+          </div>
           <div id="tobuy-list-empty" class="empty-state">
-            <div class="empty-icon">🏠</div>
             <h3>Your To-Buy List is Empty</h3>
-            <p>Select items in the database or tap the float button below to start shopping!</p>
+            <p>Select items in the database or tap the Add Item button above to start shopping!</p>
           </div>
           <div id="tobuy-list" class="items-list">
             <!-- Dynamically populated -->
@@ -319,12 +325,6 @@
       </div>
 
     </main>
-
-    <!-- Floating Action Button -->
-    <button id="btn-add-item" class="fab-btn" title="Add Item">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-      <span>Add Item</span>
-    </button>
 
   </div>
 

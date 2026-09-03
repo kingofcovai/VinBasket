@@ -53,6 +53,11 @@
   padding: 0;
 }
 
+/* Global Utility Classes */
+.hidden {
+  display: none !important;
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -544,6 +549,7 @@ input[type=number] {
   cursor: pointer;
   transition: all var(--transition-fast);
   border-radius: 12px;
+  position: relative;
 }
 
 .tab-btn svg {
@@ -563,7 +569,7 @@ input[type=number] {
 .tab-badge {
   position: absolute;
   top: 4px;
-  right: 24%;
+  right: 22%;
   background-color: var(--color-primary);
   color: white;
   font-size: 0.65rem;
@@ -965,7 +971,7 @@ input[type=number] {
   position: relative;
   display: flex;
   align-items: center;
-  width: 85px;
+  width: 95px;
   height: 36px;
 }
 
@@ -986,7 +992,7 @@ input[type=number] {
   border-radius: var(--border-radius-sm);
   padding: 0 4px 0 18px;
   font-family: var(--font-heading);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-primary);
   outline: none;
@@ -1499,27 +1505,45 @@ input[type=number] {
   color: var(--color-within);
 }
 
-/* Floating Action Button (FAB) */
+/* Add Item Button & List Headings */
+.add-item-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.list-heading {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-bottom: 6px;
+  padding-left: 4px;
+  text-align: left;
+}
+
 .fab-btn {
-  position: absolute;
-  bottom: 80px; /* offset slightly higher to sit nicely above bottom navigation */
-  right: 24px;
   background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 30px;
+  border-radius: var(--border-radius-sm);
   padding: 0 20px;
-  height: 52px;
+  height: 46px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-family: var(--font-heading);
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -4px rgba(79, 70, 229, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
-  z-index: 100;
+  width: 100%;
+  z-index: 10;
 }
 
 .fab-btn.hidden {

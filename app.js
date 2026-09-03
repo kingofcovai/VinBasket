@@ -53,6 +53,7 @@ const dom = {
   tobuyList: document.getElementById('tobuy-list'),
   boughtList: document.getElementById('bought-list'),
   tobuyListEmpty: document.getElementById('tobuy-list-empty'),
+  tobuyListTitle: document.getElementById('tobuy-list-title'),
   boughtListEmpty: document.getElementById('bought-list-empty'),
   boughtActionsContainer: document.getElementById('bought-actions-container'),
   btnCompleteTrip: document.getElementById('btn-complete-trip'),
@@ -124,28 +125,9 @@ const dom = {
 };
 
 // Default Master Data (For clean fresh state setups)
-const defaultShops = [
-  { id: 'shop_1', name: 'D-Mart' },
-  { id: 'shop_2', name: 'Walmart' },
-  { id: 'shop_3', name: 'Organic Fresh' }
-];
-
-const defaultCategories = [
-  { id: 'cat_1', name: 'Dairy & Eggs' },
-  { id: 'cat_2', name: 'Grains & Flours' },
-  { id: 'cat_3', name: 'Fruits & Veggies' },
-  { id: 'cat_4', name: 'Beverages' },
-  { id: 'cat_5', name: 'Snacks' }
-];
-
-const defaultItems = [
-  { id: '1', name: 'Fresh Milk', categoryId: 'cat_1', shopIds: ['shop_1', 'shop_2', 'shop_3'], unit: 'litres', estimatedPrice: 60, favorite: false, notes: 'Prefer low fat pack', priceHistory: {}, active: true, quantity: 2, price: 60, total: 120, bought: false },
-  { id: '2', name: 'Atta (Wheat Flour)', categoryId: 'cat_2', shopIds: ['shop_1', 'shop_2'], unit: 'kg', estimatedPrice: 340, favorite: true, notes: 'Premium multigrain package', priceHistory: {}, active: true, quantity: 1, price: 340, total: 340, bought: false },
-  { id: '3', name: 'Ghee (Clarified Butter)', categoryId: 'cat_1', shopIds: ['shop_1', 'shop_3'], unit: 'ml', estimatedPrice: 670, favorite: false, notes: '', priceHistory: {}, active: true, quantity: 500, price: 670, total: 335, bought: false },
-  { id: '4', name: 'Kabuli Chana', categoryId: 'cat_2', shopIds: ['shop_1', 'shop_2'], unit: 'g', estimatedPrice: 120, favorite: false, notes: 'Check for large grains', priceHistory: {}, active: true, quantity: 250, price: 120, total: 30, bought: false },
-  { id: '5', name: 'Brown Bread', categoryId: 'cat_5', shopIds: ['shop_1', 'shop_2'], unit: 'packs', estimatedPrice: 50, favorite: false, notes: 'Double check date', priceHistory: {}, active: true, quantity: 1, price: 50, total: 50, bought: true },
-  { id: '6', name: 'Fresh Tomatoes', categoryId: 'cat_3', shopIds: ['shop_1', 'shop_3'], unit: 'kg', estimatedPrice: 45, favorite: false, notes: 'Semi-ripe only', priceHistory: {}, active: false, quantity: 1, price: 45, total: 45, bought: false }
-];
+const defaultShops = [];
+const defaultCategories = [];
+const defaultItems = [];
 
 let currentEditingItemId = null; // Track item currently loaded in edit modal
 
@@ -339,11 +321,17 @@ function renderShoppingList() {
     return true;
   });
 
-  // Empty state toggling
+  // Empty state and Title count toggling
   if (activeItems.length === 0) {
     dom.tobuyListEmpty.classList.remove('hidden');
+    if (dom.tobuyListTitle) dom.tobuyListTitle.classList.add('hidden');
   } else {
     dom.tobuyListEmpty.classList.add('hidden');
+    if (dom.tobuyListTitle) {
+      dom.tobuyListTitle.classList.remove('hidden');
+      const itemWord = activeItems.length === 1 ? 'item' : 'items';
+      dom.tobuyListTitle.innerText = `My To-Buy List (${activeItems.length} ${itemWord})`;
+    }
   }
 
   if (boughtItems.length === 0) {
